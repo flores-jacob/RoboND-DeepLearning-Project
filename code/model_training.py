@@ -181,11 +181,11 @@ def train_model(fcn_func, filter_set, learning_params=None):
 
     if learning_params is None:
         learning_rate = 0.01
-        batch_size = 5
-        num_epochs = 2
+        batch_size = 40
+        num_epochs = 15
         steps_per_epoch = 200
         validation_steps = 50
-        workers = 2
+        workers = 4
     else:
         learning_rate = learning_params["learning_rate"]
         batch_size = learning_params["batch_size"]
@@ -200,7 +200,6 @@ def train_model(fcn_func, filter_set, learning_params=None):
     """
     # Define the Keras model and compile it for training
     model = models.Model(inputs=inputs, outputs=output_layer)
-
     model.compile(optimizer=keras.optimizers.Adam(learning_rate), loss='categorical_crossentropy')
 
     # Data iterators for loading the training and validation data
@@ -221,7 +220,7 @@ def train_model(fcn_func, filter_set, learning_params=None):
                         epochs=num_epochs,  # the number of epochs to train for,
                         validation_data=val_iter,  # validation iterator
                         validation_steps=validation_steps,  # the number of batches to validate on
-                        callbacks=callbacks,
+                        # callbacks=callbacks,
                         workers=workers)
 
     print("Done training", fcn_func.__name__, str(filter_set))
