@@ -262,8 +262,8 @@ for fcn_func in func_list:
                 "learning_rate": 0.002,
                 "batch_size": 40,
                 "num_epochs": 15,
-                "steps_per_epoch": 200,
-                "validation_steps": 50,
+                "steps_per_epoch": 50,
+                "validation_steps": 13,
                 "workers": 4
             }
 
