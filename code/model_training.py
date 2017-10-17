@@ -165,6 +165,36 @@ def fcn_model_9layer(inputs, num_classes, filter_set):
     return layers.Conv2D(num_classes, 1, activation='softmax', padding='same')(x)
 
 
+def fcn_model_11layer(inputs, num_classes, filter_set):
+    enc1_filter_num = filter_set[0]
+    enc2_filter_num = filter_set[1]
+    enc3_filter_num = filter_set[2]
+    enc4_filter_num = filter_set[3]
+    enc5_filter_num = filter_set[4]
+    one_by_one_filter_num = filter_set[5]
+    dec1_filter_num = filter_set[3]
+    dec2_filter_num = filter_set[2]
+    dec3_filter_num = filter_set[1]
+    dec4_filter_num = filter_set[0]
+
+    encoder_block1 = encoder_block(inputs, enc1_filter_num, strides=2)
+    encoder_block2 = encoder_block(encoder_block1, enc2_filter_num, strides=2)
+    encoder_block3 = encoder_block(encoder_block2, enc3_filter_num, strides=2)
+    encoder_block4 = encoder_block(encoder_block3, enc4_filter_num, strides=2)
+    encoder_block5 = encoder_block(encoder_block4, enc5_filter_num, strides=2)
+
+    one_by_one_conv = conv2d_batchnorm(encoder_block5, one_by_one_filter_num, kernel_size=1, strides=1)
+
+    decoder_block1 = decoder_block(one_by_one_conv, encoder_block4, dec1_filter_num)
+    decoder_block2 = decoder_block(decoder_block1, encoder_block3, dec2_filter_num)
+    decoder_block3 = decoder_block(decoder_block2, encoder_block2, dec3_filter_num)
+    decoder_block4 = decoder_block(decoder_block3, encoder_block1, dec4_filter_num)
+    x = decoder_block(decoder_block4, inputs, num_classes)
+
+    # The function returns the output layer of your model. "x" is the final layer obtained from the last decoder_block()
+    return layers.Conv2D(num_classes, 1, activation='softmax', padding='same')(x)
+
+
 def train_model(fcn_func, filter_set, learning_params=None):
     """
     DON'T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE
@@ -230,7 +260,9 @@ def train_model(fcn_func, filter_set, learning_params=None):
     ############# END Training code ##############
 
 # put the different functions in a list
-func_list = [fcn_model_3layer, fcn_model_5layer, fcn_model_7layer, fcn_model_9layer]
+# func_list = [fcn_model_3layer, fcn_model_5layer, fcn_model_7layer, fcn_model_9layer, fcn_model_11layer]
+func_list = [fcn_model_7layer, fcn_model_9layer, fcn_model_11layer]
+
 
 # prepare the different filter sets
 # filter_sets = {
@@ -243,10 +275,12 @@ func_list = [fcn_model_3layer, fcn_model_5layer, fcn_model_7layer, fcn_model_9la
 # }
 
 filter_sets = OrderedDict([
-    ("filter04", [4, 8, 16, 32, 64, 128]),
-    ("filter08", [8, 16, 32, 64, 128, 256]),
-    ("filter16", [16, 32, 64, 128, 256, 512]),
-    ("filter32", [32, 64, 128, 256, 512, 1024])
+    ("filter004", [4, 8, 16, 32, 64, 128]),
+    ("filter008", [8, 16, 32, 64, 128, 256]),
+    ("filter016", [16, 32, 64, 128, 256, 512]),
+    ("filter032", [32, 64, 128, 256, 512, 1024]),
+    ("filter064", [64, 128, 256, 512, 1024, 2048]),
+    ("filter128", [128, 256, 512, 1024, 2048, 4096])
 ])
 
 # How many times we run for each setting
@@ -273,6 +307,8 @@ for fcn_func in func_list:
             # weight_file_name = 'model_weights'
             weight_file_name = fcn_func.__name__ + "__" + filter_set_name + "__run" + str(run_number) + "__model_weights"
             model_tools.save_network(model, weight_file_name)
+
+            print("Saved model weights")
 
             # If you need to load a model which you previously trained you can uncomment the codeline that calls the function below.
 
