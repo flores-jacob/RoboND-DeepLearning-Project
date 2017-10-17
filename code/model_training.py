@@ -17,6 +17,7 @@ from utils import data_iterator
 from utils import plotting_tools
 from utils import model_tools
 
+from collections import OrderedDict
 
 def separable_conv2d_batchnorm(input_layer, filters, strides=1):
     output_layer = SeparableConv2DKeras(filters=filters, kernel_size=3, strides=strides,
@@ -34,9 +35,8 @@ def conv2d_batchnorm(input_layer, filters, kernel_size=3, strides=1):
     return output_layer
 
 
-
 def bilinear_upsample(input_layer):
-    output_layer = BilinearUpSampling2D((2,2))(input_layer)
+    output_layer = BilinearUpSampling2D((2, 2))(input_layer)
     return output_layer
 
 
@@ -164,119 +164,182 @@ def fcn_model_9layer(inputs, num_classes, filter_set):
     # The function returns the output layer of your model. "x" is the final layer obtained from the last decoder_block()
     return layers.Conv2D(num_classes, 1, activation='softmax', padding='same')(x)
 
-"""
-DON'T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE
-"""
 
-image_hw = 160
-image_shape = (image_hw, image_hw, 3)
-inputs = layers.Input(image_shape)
-num_classes = 3
+def train_model(fcn_func, filter_set, learning_params=None):
+    """
+    DON'T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE
+    """
+
+    print("Training: ", fcn_func.__name__, str(filter_set))
+
+    image_hw = 160
+    image_shape = (image_hw, image_hw, 3)
+    inputs = layers.Input(image_shape)
+    num_classes = 3
+
+    output_layer = fcn_func(inputs, num_classes, filter_set)
+
+    if learning_params is None:
+        learning_rate = 0.01
+        batch_size = 5
+        num_epochs = 2
+        steps_per_epoch = 200
+        validation_steps = 50
+        workers = 2
+    else:
+        learning_rate = learning_params["learning_rate"]
+        batch_size = learning_params["batch_size"]
+        num_epochs = learning_params["num_epochs"]
+        steps_per_epoch = learning_params["steps_per_epoch"]
+        validation_steps = learning_params["validation_steps"]
+        workers = learning_params["workers"]
+
+    ############# Training code ##############
+    """
+    DON'T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE
+    """
+    # Define the Keras model and compile it for training
+    model = models.Model(inputs=inputs, outputs=output_layer)
+
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate), loss='categorical_crossentropy')
+
+    # Data iterators for loading the training and validation data
+    train_iter = data_iterator.BatchIteratorSimple(batch_size=batch_size,
+                                                   data_folder=os.path.join('..', 'data', 'train'),
+                                                   image_shape=image_shape,
+                                                   shift_aug=True)
+
+    val_iter = data_iterator.BatchIteratorSimple(batch_size=batch_size,
+                                                 data_folder=os.path.join('..', 'data', 'validation'),
+                                                 image_shape=image_shape)
+
+    logger_cb = plotting_tools.LoggerPlotter()
+    callbacks = [logger_cb]
+
+    model.fit_generator(train_iter,
+                        steps_per_epoch=steps_per_epoch,  # the number of batches per epoch,
+                        epochs=num_epochs,  # the number of epochs to train for,
+                        validation_data=val_iter,  # validation iterator
+                        validation_steps=validation_steps,  # the number of batches to validate on
+                        callbacks=callbacks,
+                        workers=workers)
+
+    print("Done training", fcn_func.__name__, str(filter_set))
+
+    return model
+
+    ############# END Training code ##############
+
+# put the different functions in a list
+func_list = [fcn_model_3layer, fcn_model_5layer, fcn_model_7layer, fcn_model_9layer]
+
+# prepare the different filter sets
+# filter_sets = {
+#     "filter4": [4, 8, 16, 32, 64, 128],
+#     "filter8": [8, 16, 32, 64, 128, 256],
+#     "filter16": [16, 32, 64, 128, 256, 512],
+#     "filter32": [32, 64, 128, 256, 512, 1024]
+#     # "filter64": [64, 128, 256, 512, 1024, 2048],
+#     # "filter128": [128, 256, 512, 1024, 2048, 4096],
+# }
+
+filter_sets = OrderedDict([
+    ("filter04", [4, 8, 16, 32, 64, 128]),
+    ("filter08", [8, 16, 32, 64, 128, 256]),
+    ("filter16", [16, 32, 64, 128, 256, 512]),
+    ("filter32", [32, 64, 128, 256, 512, 1024])
+])
 
 # Call fcn_model()
-output_layer = fcn_model(inputs, num_classes)
+# output_layer = fcn_model(inputs, num_classes)
+for fcn_func in func_list:
+    for filter_set_name, filter_set in filter_sets.items():
+        learning_params = {
+            "learning_rate": 0.002,
+            "batch_size": 40,
+            "num_epochs": 15,
+            "steps_per_epoch": 200,
+            "validation_steps": 50,
+            "workers": 4
+        }
 
+        model = train_model(fcn_func, filter_set, learning_params=learning_params)
 
-learning_rate = 0.01
-batch_size = 5
-num_epochs = 2
-steps_per_epoch = 200
-validation_steps = 50
-workers = 2
+        # Save your trained model weights
+        # weight_file_name = 'model_weights'
+        weight_file_name = fcn_func.__name__ + "__" + filter_set_name + "__" + "model_weights"
+        model_tools.save_network(model, weight_file_name)
 
+        # If you need to load a model which you previously trained you can uncomment the codeline that calls the function below.
 
-"""
-DON'T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE
-"""
-# Define the Keras model and compile it for training
-model = models.Model(inputs=inputs, outputs=output_layer)
+        # weight_file_name = 'model_weights'
+        # restored_model = model_tools.load_network(weight_file_name)
 
-model.compile(optimizer=keras.optimizers.Adam(learning_rate), loss='categorical_crossentropy')
+        run_num = 'run_1'
 
-# Data iterators for loading the training and validation data
-train_iter = data_iterator.BatchIteratorSimple(batch_size=batch_size,
-                                               data_folder=os.path.join('..', 'data', 'train'),
-                                               image_shape=image_shape,
-                                               shift_aug=True)
+        val_with_targ, pred_with_targ = model_tools.write_predictions_grade_set(model,
+                                                                                run_num, 'patrol_with_targ',
+                                                                                'sample_evaluation_data')
 
-val_iter = data_iterator.BatchIteratorSimple(batch_size=batch_size,
-                                             data_folder=os.path.join('..', 'data', 'validation'),
-                                             image_shape=image_shape)
+        val_no_targ, pred_no_targ = model_tools.write_predictions_grade_set(model,
+                                                                            run_num, 'patrol_non_targ',
+                                                                            'sample_evaluation_data')
 
-logger_cb = plotting_tools.LoggerPlotter()
-callbacks = [logger_cb]
+        val_following, pred_following = model_tools.write_predictions_grade_set(model,
+                                                                                run_num, 'following_images',
+                                                                                'sample_evaluation_data')
 
-model.fit_generator(train_iter,
-                    steps_per_epoch = steps_per_epoch, # the number of batches per epoch,
-                    epochs = num_epochs, # the number of epochs to train for,
-                    validation_data = val_iter, # validation iterator
-                    validation_steps = validation_steps, # the number of batches to validate on
-                    callbacks=callbacks,
-                    workers = workers)
+        # # images while following the target
+        # im_files = plotting_tools.get_im_file_sample('sample_evaluation_data', 'following_images', run_num)
+        # for i in range(3):
+        #     im_tuple = plotting_tools.load_images(im_files[i])
+        #     plotting_tools.show_images(im_tuple)
+        #
+        # # images while at patrol without target
+        # im_files = plotting_tools.get_im_file_sample('sample_evaluation_data', 'patrol_non_targ', run_num)
+        # for i in range(3):
+        #     im_tuple = plotting_tools.load_images(im_files[i])
+        #     plotting_tools.show_images(im_tuple)
+        #
+        # # images while at patrol with target
+        # im_files = plotting_tools.get_im_file_sample('sample_evaluation_data', 'patrol_with_targ', run_num)
+        # for i in range(3):
+        #     im_tuple = plotting_tools.load_images(im_files[i])
+        #     plotting_tools.show_images(im_tuple)
 
+        # Scores for while the quad is following behind the target.
+        true_pos1, false_pos1, false_neg1, iou1 = scoring_utils.score_run_iou(val_following, pred_following)
 
-# Save your trained model weights
-weight_file_name = 'model_weights'
-model_tools.save_network(model, weight_file_name)
+        # Scores for images while the quad is on patrol and the target is not visable
+        true_pos2, false_pos2, false_neg2, iou2 = scoring_utils.score_run_iou(val_no_targ, pred_no_targ)
 
-# If you need to load a model which you previously trained you can uncomment the codeline that calls the function below.
+        # This score measures how well the neural network can detect the target from far away
+        true_pos3, false_pos3, false_neg3, iou3 = scoring_utils.score_run_iou(val_with_targ, pred_with_targ)
 
-# weight_file_name = 'model_weights'
-# restored_model = model_tools.load_network(weight_file_name)
+        # Sum all the true positives, etc from the three datasets to get a weight for the score
+        true_pos = true_pos1 + true_pos2 + true_pos3
+        false_pos = false_pos1 + false_pos2 + false_pos3
+        false_neg = false_neg1 + false_neg2 + false_neg3
 
+        print("Done processing " + fcn_func.__name__ + " with " + filter_set_name)
 
-run_num = 'run_1'
+        weight = true_pos / (true_pos + false_neg + false_pos)
+        print("weight", weight)
 
-val_with_targ, pred_with_targ = model_tools.write_predictions_grade_set(model,
-                                        run_num,'patrol_with_targ', 'sample_evaluation_data')
+        # The IoU for the dataset that never includes the hero is excluded from grading
+        final_IoU = (iou1 + iou3) / 2
+        print("final_IoU", final_IoU)
 
-val_no_targ, pred_no_targ = model_tools.write_predictions_grade_set(model,
-                                        run_num,'patrol_non_targ', 'sample_evaluation_data')
+        # And the final grade score is
+        final_score = final_IoU * weight
+        print("final_score", final_score)
 
-val_following, pred_following = model_tools.write_predictions_grade_set(model,
-                                        run_num,'following_images', 'sample_evaluation_data')
+        printable_weight = "{:5.4f}".format(round(weight, 4))
+        printable_final_IoU = "{:5.4f}".format(round(final_IoU, 4))
+        printable_final_score = "{:5.4f}".format(round(final_score, 4))
 
+        result_line = "final_score: " + printable_final_score + "\t" + "final_IoU: " + printable_final_IoU + "\t" + "weight: " + printable_weight + "\t" + fcn_func.__name__ + "\t" + filter_set_name + "\t" + str(
+            learning_params) + "\n"
 
-# images while following the target
-im_files = plotting_tools.get_im_file_sample('sample_evaluation_data','following_images', run_num)
-for i in range(3):
-    im_tuple = plotting_tools.load_images(im_files[i])
-    plotting_tools.show_images(im_tuple)
-
-# images while at patrol without target
-im_files = plotting_tools.get_im_file_sample('sample_evaluation_data', 'patrol_non_targ', run_num)
-for i in range(3):
-    im_tuple = plotting_tools.load_images(im_files[i])
-    plotting_tools.show_images(im_tuple)
-
-# images while at patrol with target
-im_files = plotting_tools.get_im_file_sample('sample_evaluation_data','patrol_with_targ', run_num)
-for i in range(3):
-    im_tuple = plotting_tools.load_images(im_files[i])
-    plotting_tools.show_images(im_tuple)
-
-
-# Scores for while the quad is following behind the target.
-true_pos1, false_pos1, false_neg1, iou1 = scoring_utils.score_run_iou(val_following, pred_following)
-
-# Scores for images while the quad is on patrol and the target is not visable
-true_pos2, false_pos2, false_neg2, iou2 = scoring_utils.score_run_iou(val_no_targ, pred_no_targ)
-
-# This score measures how well the neural network can detect the target from far away
-true_pos3, false_pos3, false_neg3, iou3 = scoring_utils.score_run_iou(val_with_targ, pred_with_targ)
-
-# Sum all the true positives, etc from the three datasets to get a weight for the score
-true_pos = true_pos1 + true_pos2 + true_pos3
-false_pos = false_pos1 + false_pos2 + false_pos3
-false_neg = false_neg1 + false_neg2 + false_neg3
-
-weight = true_pos/(true_pos+false_neg+false_pos)
-print(weight)
-
-# The IoU for the dataset that never includes the hero is excluded from grading
-final_IoU = (iou1 + iou3)/2
-print(final_IoU)
-
-# And the final grade score is
-final_score = final_IoU * weight
-print(final_score)
+        with open("result_file.txt", "a") as result_file:
+            result_file.writelines(result_line)
