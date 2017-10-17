@@ -342,7 +342,7 @@ for fcn_func in func_list:
             printable_final_IoU = "{:5.4f}".format(round(final_IoU, 4))
             printable_final_score = "{:5.4f}".format(round(final_score, 4))
 
-            result_line = "final_score: " + printable_final_score + "\t" + "final_IoU: " + printable_final_IoU + "\t" + "weight: " + printable_weight + "\t" + fcn_func.__name__ + "\t" + filter_set_name + "\t" + str(
+            result_line = "final_score: " + printable_final_score + "\t" + "final_IoU: " + printable_final_IoU + "\t" + "weight: " + printable_weight + "\t" + fcn_func.__name__ + "\t" + filter_set_name + "\t" + str(run_number) + "\t" + str(
                 learning_params) + "\n"
 
             with open("result_file.txt", "a") as result_file:
