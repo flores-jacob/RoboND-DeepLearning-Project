@@ -343,3 +343,7 @@ for fcn_func in func_list:
 
         with open("result_file.txt", "a") as result_file:
             result_file.writelines(result_line)
+
+        if final_score >= 0.4:
+            with open("success_file.txt", "a") as success_file:
+                success_file.writelines(result_line)
