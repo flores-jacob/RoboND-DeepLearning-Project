@@ -250,100 +250,104 @@ filter_sets = OrderedDict([
     ("filter32", [32, 64, 128, 256, 512, 1024])
 ])
 
+# How many times we run for each setting
+number_of_runs = 3
+
 # Call fcn_model()
 # output_layer = fcn_model(inputs, num_classes)
 for fcn_func in func_list:
     for filter_set_name, filter_set in filter_sets.items():
-        learning_params = {
-            "learning_rate": 0.002,
-            "batch_size": 40,
-            "num_epochs": 15,
-            "steps_per_epoch": 200,
-            "validation_steps": 50,
-            "workers": 4
-        }
+        for run_number in range(1, number_of_runs + 1):
+            learning_params = {
+                "learning_rate": 0.002,
+                "batch_size": 40,
+                "num_epochs": 15,
+                "steps_per_epoch": 200,
+                "validation_steps": 50,
+                "workers": 4
+            }
 
-        model = train_model(fcn_func, filter_set, learning_params=learning_params)
+            model = train_model(fcn_func, filter_set, learning_params=learning_params)
 
-        # Save your trained model weights
-        # weight_file_name = 'model_weights'
-        weight_file_name = fcn_func.__name__ + "__" + filter_set_name + "__" + "model_weights"
-        model_tools.save_network(model, weight_file_name)
+            # Save your trained model weights
+            # weight_file_name = 'model_weights'
+            weight_file_name = fcn_func.__name__ + "__" + filter_set_name + "__run" + str(run_number) + "__model_weights"
+            model_tools.save_network(model, weight_file_name)
 
-        # If you need to load a model which you previously trained you can uncomment the codeline that calls the function below.
+            # If you need to load a model which you previously trained you can uncomment the codeline that calls the function below.
 
-        # weight_file_name = 'model_weights'
-        # restored_model = model_tools.load_network(weight_file_name)
+            # weight_file_name = 'model_weights'
+            # restored_model = model_tools.load_network(weight_file_name)
 
-        run_num = 'run_1'
+            run_num = 'run_1'
 
-        val_with_targ, pred_with_targ = model_tools.write_predictions_grade_set(model,
-                                                                                run_num, 'patrol_with_targ',
+            val_with_targ, pred_with_targ = model_tools.write_predictions_grade_set(model,
+                                                                                    run_num, 'patrol_with_targ',
+                                                                                    'sample_evaluation_data')
+
+            val_no_targ, pred_no_targ = model_tools.write_predictions_grade_set(model,
+                                                                                run_num, 'patrol_non_targ',
                                                                                 'sample_evaluation_data')
 
-        val_no_targ, pred_no_targ = model_tools.write_predictions_grade_set(model,
-                                                                            run_num, 'patrol_non_targ',
-                                                                            'sample_evaluation_data')
+            val_following, pred_following = model_tools.write_predictions_grade_set(model,
+                                                                                    run_num, 'following_images',
+                                                                                    'sample_evaluation_data')
 
-        val_following, pred_following = model_tools.write_predictions_grade_set(model,
-                                                                                run_num, 'following_images',
-                                                                                'sample_evaluation_data')
+            # # images while following the target
+            # im_files = plotting_tools.get_im_file_sample('sample_evaluation_data', 'following_images', run_num)
+            # for i in range(3):
+            #     im_tuple = plotting_tools.load_images(im_files[i])
+            #     plotting_tools.show_images(im_tuple)
+            #
+            # # images while at patrol without target
+            # im_files = plotting_tools.get_im_file_sample('sample_evaluation_data', 'patrol_non_targ', run_num)
+            # for i in range(3):
+            #     im_tuple = plotting_tools.load_images(im_files[i])
+            #     plotting_tools.show_images(im_tuple)
+            #
+            # # images while at patrol with target
+            # im_files = plotting_tools.get_im_file_sample('sample_evaluation_data', 'patrol_with_targ', run_num)
+            # for i in range(3):
+            #     im_tuple = plotting_tools.load_images(im_files[i])
+            #     plotting_tools.show_images(im_tuple)
 
-        # # images while following the target
-        # im_files = plotting_tools.get_im_file_sample('sample_evaluation_data', 'following_images', run_num)
-        # for i in range(3):
-        #     im_tuple = plotting_tools.load_images(im_files[i])
-        #     plotting_tools.show_images(im_tuple)
-        #
-        # # images while at patrol without target
-        # im_files = plotting_tools.get_im_file_sample('sample_evaluation_data', 'patrol_non_targ', run_num)
-        # for i in range(3):
-        #     im_tuple = plotting_tools.load_images(im_files[i])
-        #     plotting_tools.show_images(im_tuple)
-        #
-        # # images while at patrol with target
-        # im_files = plotting_tools.get_im_file_sample('sample_evaluation_data', 'patrol_with_targ', run_num)
-        # for i in range(3):
-        #     im_tuple = plotting_tools.load_images(im_files[i])
-        #     plotting_tools.show_images(im_tuple)
+            # Scores for while the quad is following behind the target.
+            true_pos1, false_pos1, false_neg1, iou1 = scoring_utils.score_run_iou(val_following, pred_following)
 
-        # Scores for while the quad is following behind the target.
-        true_pos1, false_pos1, false_neg1, iou1 = scoring_utils.score_run_iou(val_following, pred_following)
+            # Scores for images while the quad is on patrol and the target is not visable
+            true_pos2, false_pos2, false_neg2, iou2 = scoring_utils.score_run_iou(val_no_targ, pred_no_targ)
 
-        # Scores for images while the quad is on patrol and the target is not visable
-        true_pos2, false_pos2, false_neg2, iou2 = scoring_utils.score_run_iou(val_no_targ, pred_no_targ)
+            # This score measures how well the neural network can detect the target from far away
+            true_pos3, false_pos3, false_neg3, iou3 = scoring_utils.score_run_iou(val_with_targ, pred_with_targ)
 
-        # This score measures how well the neural network can detect the target from far away
-        true_pos3, false_pos3, false_neg3, iou3 = scoring_utils.score_run_iou(val_with_targ, pred_with_targ)
+            # Sum all the true positives, etc from the three datasets to get a weight for the score
+            true_pos = true_pos1 + true_pos2 + true_pos3
+            false_pos = false_pos1 + false_pos2 + false_pos3
+            false_neg = false_neg1 + false_neg2 + false_neg3
 
-        # Sum all the true positives, etc from the three datasets to get a weight for the score
-        true_pos = true_pos1 + true_pos2 + true_pos3
-        false_pos = false_pos1 + false_pos2 + false_pos3
-        false_neg = false_neg1 + false_neg2 + false_neg3
+            print("Done processing " + fcn_func.__name__ + " with " + filter_set_name)
 
-        print("Done processing " + fcn_func.__name__ + " with " + filter_set_name)
+            weight = true_pos / (true_pos + false_neg + false_pos)
+            print("weight", weight)
 
-        weight = true_pos / (true_pos + false_neg + false_pos)
-        print("weight", weight)
+            # The IoU for the dataset that never includes the hero is excluded from grading
+            final_IoU = (iou1 + iou3) / 2
+            print("final_IoU", final_IoU)
 
-        # The IoU for the dataset that never includes the hero is excluded from grading
-        final_IoU = (iou1 + iou3) / 2
-        print("final_IoU", final_IoU)
+            # And the final grade score is
+            final_score = final_IoU * weight
+            print("final_score", final_score)
 
-        # And the final grade score is
-        final_score = final_IoU * weight
-        print("final_score", final_score)
+            printable_weight = "{:5.4f}".format(round(weight, 4))
+            printable_final_IoU = "{:5.4f}".format(round(final_IoU, 4))
+            printable_final_score = "{:5.4f}".format(round(final_score, 4))
 
-        printable_weight = "{:5.4f}".format(round(weight, 4))
-        printable_final_IoU = "{:5.4f}".format(round(final_IoU, 4))
-        printable_final_score = "{:5.4f}".format(round(final_score, 4))
+            result_line = "final_score: " + printable_final_score + "\t" + "final_IoU: " + printable_final_IoU + "\t" + "weight: " + printable_weight + "\t" + fcn_func.__name__ + "\t" + filter_set_name + "\t" + str(
+                learning_params) + "\n"
 
-        result_line = "final_score: " + printable_final_score + "\t" + "final_IoU: " + printable_final_IoU + "\t" + "weight: " + printable_weight + "\t" + fcn_func.__name__ + "\t" + filter_set_name + "\t" + str(
-            learning_params) + "\n"
+            with open("result_file.txt", "a") as result_file:
+                result_file.writelines(result_line)
 
-        with open("result_file.txt", "a") as result_file:
-            result_file.writelines(result_line)
-
-        if final_score >= 0.4:
-            with open("success_file.txt", "a") as success_file:
-                success_file.writelines(result_line)
+            if final_score >= 0.4:
+                with open("success_file.txt", "a") as success_file:
+                    success_file.writelines(result_line)
