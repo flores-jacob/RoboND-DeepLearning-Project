@@ -260,12 +260,13 @@ for fcn_func in func_list:
             learning_params = {
                 "learning_rate": 0.002,
                 "batch_size": 40,
-                "num_epochs": 15,
+                "num_epochs": 20,
                 "steps_per_epoch": 50,
                 "validation_steps": 13,
                 "workers": 4
             }
 
+            print("Run number " + str(run_number))
             model = train_model(fcn_func, filter_set, learning_params=learning_params)
 
             # Save your trained model weights
@@ -346,7 +347,9 @@ for fcn_func in func_list:
 
             with open("result_file.txt", "a") as result_file:
                 result_file.writelines(result_line)
+                print("results appended to file")
 
             if final_score >= 0.4:
                 with open("success_file.txt", "a") as success_file:
                     success_file.writelines(result_line)
+                    print("success appended to file")
