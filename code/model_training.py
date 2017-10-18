@@ -210,7 +210,7 @@ def train_model(fcn_func, filter_set, learning_params=None):
     output_layer = fcn_func(inputs, num_classes, filter_set)
 
     if learning_params is None:
-        learning_rate = 0.01
+        learning_rate = 0.002
         batch_size = 40
         num_epochs = 15
         steps_per_epoch = 200
