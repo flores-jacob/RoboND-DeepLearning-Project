@@ -103,7 +103,7 @@ def fcn_model_5layer(inputs, num_classes, filter_set):
     enc1_filter_num = filter_set[0]
     enc2_filter_num = filter_set[1]
     one_by_one_filter_num = filter_set[2]
-    dec1_filter_num = filter_set[0]
+    dec1_filter_num = filter_set[1]
 
     encoder_block1 = encoder_block(inputs, enc1_filter_num, strides=2)
     encoder_block2 = encoder_block(encoder_block1, enc2_filter_num, strides=2)
@@ -122,8 +122,8 @@ def fcn_model_7layer(inputs, num_classes, filter_set):
     enc2_filter_num = filter_set[1]
     enc3_filter_num = filter_set[2]
     one_by_one_filter_num = filter_set[3]
-    dec1_filter_num = filter_set[1]
-    dec2_filter_num = filter_set[0]
+    dec1_filter_num = filter_set[2]
+    dec2_filter_num = filter_set[1]
 
     encoder_block1 = encoder_block(inputs, enc1_filter_num, strides=2)
     encoder_block2 = encoder_block(encoder_block1, enc2_filter_num, strides=2)
@@ -145,9 +145,9 @@ def fcn_model_9layer(inputs, num_classes, filter_set):
     enc3_filter_num = filter_set[2]
     enc4_filter_num = filter_set[3]
     one_by_one_filter_num = filter_set[4]
-    dec1_filter_num = filter_set[2]
-    dec2_filter_num = filter_set[1]
-    dec3_filter_num = filter_set[0]
+    dec1_filter_num = filter_set[3]
+    dec2_filter_num = filter_set[2]
+    dec3_filter_num = filter_set[1]
 
     encoder_block1 = encoder_block(inputs, enc1_filter_num, strides=2)
     encoder_block2 = encoder_block(encoder_block1, enc2_filter_num, strides=2)
@@ -172,10 +172,10 @@ def fcn_model_11layer(inputs, num_classes, filter_set):
     enc4_filter_num = filter_set[3]
     enc5_filter_num = filter_set[4]
     one_by_one_filter_num = filter_set[5]
-    dec1_filter_num = filter_set[3]
-    dec2_filter_num = filter_set[2]
-    dec3_filter_num = filter_set[1]
-    dec4_filter_num = filter_set[0]
+    dec1_filter_num = filter_set[4]
+    dec2_filter_num = filter_set[3]
+    dec3_filter_num = filter_set[2]
+    dec4_filter_num = filter_set[1]
 
     encoder_block1 = encoder_block(inputs, enc1_filter_num, strides=2)
     encoder_block2 = encoder_block(encoder_block1, enc2_filter_num, strides=2)
@@ -292,11 +292,11 @@ for fcn_func in func_list:
     for filter_set_name, filter_set in filter_sets.items():
         for run_number in range(1, number_of_runs + 1):
             learning_params = {
-                "learning_rate": 0.002,
+                "learning_rate": 0.01,
                 "batch_size": 40,
-                "num_epochs": 20,
-                "steps_per_epoch": 50,
-                "validation_steps": 13,
+                "num_epochs": 5,
+                "steps_per_epoch": 200,
+                "validation_steps": 50,
                 "workers": 4
             }
 
