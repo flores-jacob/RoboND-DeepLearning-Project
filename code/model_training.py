@@ -262,7 +262,7 @@ def train_model(fcn_func, filter_set, learning_params=None):
 # put the different functions in a list
 # func_list = [fcn_model_3layer, fcn_model_5layer, fcn_model_7layer, fcn_model_9layer, fcn_model_11layer]
 # func_list = [fcn_model_7layer, fcn_model_9layer, fcn_model_11layer]
-func_list = [fcn_model_9layer, fcn_model_11layer]
+func_list = [fcn_model_9layer]
 
 
 # prepare the different filter sets
@@ -277,11 +277,11 @@ func_list = [fcn_model_9layer, fcn_model_11layer]
 
 filter_sets = OrderedDict([
     #("filter004", [4, 8, 16, 32, 64, 128]),
-    ("filter008", [8, 16, 32, 64, 128, 256]),
-    ("filter016", [16, 32, 64, 128, 256, 512]),
-    ("filter032", [32, 64, 128, 256, 512, 1024]),
-    ("filter064", [64, 128, 256, 512, 1024, 2048]),
-    ("filter128", [128, 256, 512, 1024, 2048, 4096])
+    ("filter008", [8, 16, 32, 64, 128, 256])
+    # ("filter016", [16, 32, 64, 128, 256, 512]),
+    # ("filter032", [32, 64, 128, 256, 512, 1024]),
+    # ("filter064", [64, 128, 256, 512, 1024, 2048]),
+    # ("filter128", [128, 256, 512, 1024, 2048, 4096])
 ])
 
 # How many times we run for each setting
@@ -295,7 +295,7 @@ for fcn_func in func_list:
             learning_params = {
                 "learning_rate": 0.01,
                 "batch_size": 40,
-                "num_epochs": 5,
+                "num_epochs": 8,
                 "steps_per_epoch": 200,
                 "validation_steps": 50,
                 "workers": 4
