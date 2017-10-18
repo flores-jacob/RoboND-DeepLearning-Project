@@ -285,7 +285,7 @@ filter_sets = OrderedDict([
 ])
 
 # How many times we run for each setting
-number_of_runs = 3
+number_of_runs = 15
 
 # Call fcn_model()
 # output_layer = fcn_model(inputs, num_classes)
