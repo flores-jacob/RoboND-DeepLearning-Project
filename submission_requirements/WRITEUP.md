@@ -1,0 +1,202 @@
+# Deep Learning Project Writeup
+
+This writeup was prepared for the benefit of the Udacity Robotics Nanodegree Deep Learning Project. The intent is to document and clarify the decisions and the reaseons behind these that were made in the project. 
+
+1. The write-up conveys the an understanding of the network architecture. 
+
+The student clearly explains each layer of the network architecture and the role that it plays in the overall network. The student can demonstrate the benefits and/or drawbacks different network architectures pertaining to this project and can justify the current network with factual data. Any choice of configurable parameters should also be explained in the network architecture.
+
+The student shall also provide a graph, table, diagram, illustration or figure for the overall network to serve as a reference for the reviewer.
+
+
+TODO: List all parts of the network, illustrate the network, explain each layer of the network
+
+## Network Architecture
+For this project, we are using a Fully Convolutional Neural Network to help us in image segmentation object identification. That is, the neural network will help us identify objects in an image, and at the same time tell us what specific part of the image the object is at. To be specific, we will be using images taken by a simulated drone, identify and detect the presence of a particular human that the drone has been tagged to follow (referred to as the hero), identify which part of the image the hero is in, and also differentiate the hero/target from any other people that may be found in the image.
+
+For this challenge, we will be using a Full Convolutional Neural Network that has 5 layers.  Two (2) encoding layers, one 1 x 1 convolutional layer, and two (2) decoding layers, with the last decoding layer serving as the output layer which returns the result.
+
+Below is an illustration of the final network architecture. 
+![network-architecture-overview](./images/architecture_overview.png)
+
+Each encoding layer performs a *depthwise seprarable convolution*. This requires less compute resources as opposed to using normal convolutions. It is able to accomplish this by significalty reducing the total number of parameters necessary for the computations. Paul-Louis Pröve in his blog post entitled "[An Introduction to different Types of Convolutions in Deep Learning][1]" provides a couple of examples demonstrating this difference:
+
+> Let’s say we have a 3x3 convolutional layer on 16 input channels and 32 output channels. What happens in detail is that every of the 16 channels is traversed by 32 3x3 kernels resulting in 512 (16x32) feature maps. Next, we merge 1 feature map out of every input channel by adding them up. Since we can do that 32 times, we get the 32 output channels we wanted.
+
+> For a depthwise separable convolution on the same example, we traverse the 16 channels with 1 3x3 kernel each, giving us 16 feature maps. Now, before merging anything, we traverse these 16 feature maps with 32 1x1 convolutions each and only then start to them add together. *This results in 656 (16x3x3 + 16x32x1x1) parameters opposed to the 4608 (16x32x3x3) parameters* from above. (emphasis mine)
+
+In our case, we also use a kernel size of three (3) but with input and output channels that will be identified later on. Stride for each encoding layer is two (2), which basically halves the succeeding output's width and height for each encoding layer present. Results are also batch normalized before being returned as output.
+
+Below is an illustration of the separable convolution used for our encoding blocks
+![separable-convolution-for-encoder](./images/sep_conv_for_encoder.png)
+
+Once done with the encoder blocks, output is then passed as input onto a single fully connected 1x1 layer. The kernel size for this layer is one (1) as the name implies, and also with a stride of one (1). A 1 x 1 fully connected layer normally serves as the output layer for Fully Convoluted Networks whose aim is to simply identify or classify objects found in images. However, since our objective is also to locate which part of the image these objects are, we need to have additional steps and layers after this.
+
+These steps and layers are referred to as our decoder blocks. Our decoder blocks are fairly more complex than the previously discussed encoder block as well as 1 x 1 fully connected layer.  It has 3 main subparts, namely: the input upsampling part, skip connection part, and the additional convolution part. The upsampling part takes the input, and increases its width and height by a factor of two. This is done through what is called a *transposed convolution*. The skip connection part concatenates the upsampled data with the corresponding encoder output with the same dimensions. This would allow us to retain information that the image has lost after going through multiple reductions of height and width. Another way of thinking of this is that skip connections allows us to "fill in the blanks" of the upsampled data. And lastly, we pass the data onto three(3) succeeding separable convolution layers with a stride of one(1) before returning the output.  The stride of 1 guarantees that there is no change in the width or height of the data. We also obtain an output with the desired number of output depth or filters by passing this number using the "filters" parameter.
+
+Below is an image for the separable convolution used for the decoder blocks. Note that the output width and heights remiain the same as the inputs as opposed to the encoder block's where these are halved.
+![separable-convolution-for-decoder](./images/sep_conv_for_decoder.png)
+
+Below is an illustration of the decoder block's architecture. It is more complex than that of an encoder block which is simply composed of one separable convolution with a stride of 2. The decoder block on the other hand involves an upsampling step, a skip connection, as well as three succeeding separable convolutions.
+
+![decoder-architecture](./images/decoder_arch.png)
+
+As can be seen in the image, the network is composed of five(5) layers.  Two(2) encoders, one(1) fully connected 1x1 layer, and two(2) decoders. Although a fully connected 1x1 layer is mentioned only once in the overview of the network architecture, 1x1 convolutions are actually used in every layer of the network in the form of separable 2d convolutions. These 1x1 convolutions assist us in dimensional reduction, resulting in sped up and less memory intensive computations. 1x1 convolutions also return outputs with any depth or number of filters that we want or specify.
+
+Convolutional Neural Networks used for image classification normally have one or two fully connected layers found at the end the network prior to returning the result. These last two fully connected layers are ultimately used to classify the content of the image input.  Each node in each "fully connected layer" is connected to each node of the previous layer.  The intuition is that these fully connected layers need to make sense of all the nodes in the previous layer, and how each node relates to each other. 
+
+In our particular model, we can consider the middle 1x1 layer to be fully connected.  The encoding layers funnel the image until it reaches the 1x1 layer which is responsible for classifying objects found in the image.  Once the objects have been classified, the decoding layers after this 1x1 layer are later on used to ensure that spatial information is preserved, and that the final output shows where each object is located in the image.
+
+
+
+# TODO https://www.quora.com/When-should-we-use-fully-connected-layers-and-when-to-use-the-partial-connection-in-hidden-layers-of-convolutional-network
+
+
+# TODO create image for encoder, create image for separable 2d convolution, create image for decoder, create image for 
+
+
+
+Brief information about neural network architecture significance
+Provide Neural net architecture
+Explain significance of number of layers
+Explain significance of depth of the layers
+
+
+
+```python
+
+def separable_conv2d_batchnorm(input_layer, filters, strides=1):
+    output_layer = SeparableConv2DKeras(filters=filters, kernel_size=3, strides=strides,
+                                        padding='same', activation='relu')(input_layer)
+
+    output_layer = layers.BatchNormalization()(output_layer)
+    return output_layer
+
+
+def conv2d_batchnorm(input_layer, filters, kernel_size=3, strides=1):
+    output_layer = layers.Conv2D(filters=filters, kernel_size=kernel_size, strides=strides,
+                                 padding='same', activation='relu')(input_layer)
+
+    output_layer = layers.BatchNormalization()(output_layer)
+    return output_layer
+
+
+def bilinear_upsample(input_layer):
+    output_layer = BilinearUpSampling2D((2, 2))(input_layer)
+    return output_layer
+
+
+def encoder_block(input_layer,  filters, strides):
+    # TODO Create a separable convolution layer using the separable_conv2d_batchnorm() function.
+    output_layer = separable_conv2d_batchnorm(input_layer, filters, strides=strides)
+    return output_layer
+
+
+def decoder_block(small_ip_layer, large_ip_layer, filters):
+    # TODO Upsample the small input layer using the bilinear_upsample() function.
+    upsampled_small_ip_layer = bilinear_upsample(small_ip_layer)
+
+    # print("small", upsampled_small_ip_layer.get_shape())
+    # print("large", large_ip_layer.get_shape())
+
+    # TODO Concatenate the upsampled and large input layers using layers.concatenate
+    concatenated = layers.concatenate([upsampled_small_ip_layer, large_ip_layer])
+    # TODO Add some number of separable convolution layers
+    conv_layer_1 = separable_conv2d_batchnorm(concatenated, filters)
+    conv_layer_2 = separable_conv2d_batchnorm(conv_layer_1, filters)
+    output_layer = separable_conv2d_batchnorm(conv_layer_2, filters)
+
+    return output_layer
+
+def fcn_model_5layer(inputs, num_classes, filter_set):
+    enc1_filter_num = filter_set[0]
+    enc2_filter_num = filter_set[1]
+    one_by_one_filter_num = filter_set[2]
+    dec1_filter_num = filter_set[1]
+
+    encoder_block1 = encoder_block(inputs, enc1_filter_num, strides=2)
+    encoder_block2 = encoder_block(encoder_block1, enc2_filter_num, strides=2)
+
+    one_by_one_conv = conv2d_batchnorm(encoder_block2, one_by_one_filter_num, kernel_size=1, strides=1)
+
+    decoder_block1 = decoder_block(one_by_one_conv, encoder_block1, dec1_filter_num)
+    x = decoder_block(decoder_block1, inputs, num_classes)
+
+    # The function returns the output layer of your model. "x" is the final layer obtained from the last decoder_block()
+    return layers.Conv2D(num_classes, 1, activation='softmax', padding='same')(x)
+```
+
+
+
+
+## Setting the Network Parameters
+Training the model requires specifying several hyperparameters.  This section of the writeup will attempt to discuss these parameters, indicate the values used, and clarify why such values were chosen.
+
+1. learning_rate
+    - Value used: 0.01
+    - What is the learning rate?: The learning rate is a value that sets how quickly (or slowly) a neural network makes adjustments to what it has learned while it is being trained. In more concrete terms, it is a numerical value (usually less than 1) that we multiply to either the error minimization rate we get from logistic regression, or multiply to the gradient we get from gradient descent. A value of 1 means that we take the gradient or error minimization rate as is and learn at that rate.  A value of 0.10 would mean that we make learning adjustments at 10% the rate of the computed gradient or error minimization rate. As an example, if the error minimization rate is +10 and the learning rate is 1, then we make an adjustment with the value of +10.  However, if the learning rate is 0.1 then we only make an adjustment of +1.
+    - What makes for a good learning rate?: The ideal learning rate would allow a neural network to reach the gradient descent and error minimization minimums at the least amount of time, without causing overfitting.
+    - How to obtain the best learning rate?: Every neural network and model has its own optimal learning rate.  Determining this amount normally involves testing different values to see which value would be most effective.
+    - What happens if we use the wrong learning rate?: Using learning rates that are too large would cause error rates to increase instead of decrease. Using learning rates that are too small may cause overfitting, apart from needlessly prolonging learning times.
+    - Justification for the learning rate used: This is the default learning rate provided in the project. Learning rates of 0.003, 0.002, and 0.001 were also used. Given the same number of training time or epochs, the aforementioned 3 learning rates allowed the error or loss values to plateau at generally lower rates as compared to the 0.01 learning rate, at the cost however of more epochs. Several training runs however showed that training with 0.01 as the learning rate still allowed for final score values that are fairly close to the requirement. As such, instead of constantly tweaking the learning rate, we focused our efforts on improving other parts of the project.
+
+2. num_epochs
+    - Value used: 20
+    - What is an epoch?: Ideally, an epoch is a single run that will let the model use or "see" all the available training data to minimize its errors. Basically, an epoch is a single complete pass over all (or most) of the available training data.
+    - What makes for a good value for an epoch?: The ideal number of epochs would be the lowest possible value that would still be able to fully minimize the error rates of the neural network being trained, and avoid overfitting at the same time.
+    - What happens if we use the wrong number of epochs?: A too low number of epochs would be insufficient in training the neural network to reach an acceptable error or loss rate, rendering it incapable of properly performing its intended function (i.e. the neural network won't be good enough to actually be useful for what it was designed). A too high number of epochs May cause overfitting, meaning the neural network may become very good at performing its tasks while using the training set. However, once it is fed non-training set data, it would not be able to perform in an acceptable manner. Furthermore, using more epochs than that which is necessary would be a waste of compute resources.
+    - Justification for the number of epochs used: The number of epochs used started off at a low value of 5, and was increased to 8, 10, 15, then 20, when it seemed like the neural network was still capable of pushing loss and error rates downward, and that a low number of epochs was prematurely interrupting the neural network from reaching the minimum error plateau. In other words, instead of continuing to minimize the loss or error rates, the neural network stops computing because the number of epochs were already exhausted. This is even before the error rates have reached a plateau.
+
+3. batch_size
+    - Value used: 40
+    - What is the batch size?: The batch size is the number of images that are processed together as a batch for every step of the epoch or the training period. So in this instance, for every step of training, 40 images are taken from the training set and are used for the gradient descent step to minimize the error or loss value.
+    - What makes for a good batch size?: A good batch size would be one that is large enough such that it can still be handled by available computing resources, but at the same time not too large to cause overfitting. It should also be small enough but not too small. If the batches are too small, the neural network may have difficulty forming its generalizations.
+    - Justification for the batch size used: The default value provided by the project was 20 images, and it was for a training set with more than 4000 images. In this project's instance, the author used image flipping (get mirror image copies of the training data) effectively doubling the training set to more than 8000 images.  As a response, the batch size was also doubled to 40. 
+
+4. steps_per_epoch
+    - Value used: 200
+    - What are the steps per epoch?: A training step is basically one gradient update or one error loss update. This is the number of image batches the neural network has to go though during training. In our instance, the batch size is 40, meaning the neural network uses 40 images every time it computes and updates the gradient and error. Since there are 200 steps per epoch, we end up processing 8000 images (40 x 200) for each epoch.
+    - What makes for a good value of steps for an epoch?: The value would be based on the chosen batch size. Normally the number of steps chosen would be such that all the available training images would be used for each epoch. In our instance, we have more than 8000 training images. We divide 8000 by our batch size (40) to get 200 steps in each epoch.
+    - Justification for the number of steps used: This is the default value provided in the project. The value worked fairly well, so it has not been changed.  The author did however experiment with the value of steps per epoch at 50, but the final scores returned of these attempts were fairly low, and had far too many 0 values.
+    
+5. validation_steps
+    - Value used: 50
+    - What are validation steps?: Similar to steps_per_epoch, but instead of using training data, we use validation data.
+    - Justification for the number of validation steps used: This is also the default value provided by the project.
+    
+6. workers
+    - Value used: 4
+    - What are workers?: According to the Keras documentation, workers are the number of instances to spin up. The project notes imply that this value is ultimately limited by available compute resources.
+    - Justification for the number of validation steps used: Different values were tried, from the default value of 2, 4, and even 20 to 100. Larger values tended to significantly slow down the initialization of gradient descent computation. However, the speed at which epoch computations were finished did not seem to improve significantly even with higher worker numbers.
+
+
+## Results and Discussion
+Multiple runs were initially performed using different numbers of layers and layer depths at smaller batches of 40, starting from 3 layer networks (1 encoder, 1x1 fully connected layer, 1 decoder) to 9 layer networks (4 encoders, 1x1 fully connected layer, 4 decoders).  The initial values for the depths were doubled for each encoder up to the 1x1 convolution layer, then halved for each decoder until the output.  For example, a 5 layer network was run with layer depths of (8, 16, 32, 16, output depth) up to layer depths of (32, 64, 128, 64, output depth). Initial runs showed that 9 layered networks produced the least number of results that returned 0 for the weights, IoU, and final score, and that the returned scores are generally higher than those found in networks with less layers. As such, we focused on training 9 layer networks with layer depths of (32, 64, 128, 256, 512, 256. 128, 64, output depth), at normal batch sizes of 200 per step. After performing 28 runs using the aforementioned parameters, 0.4490 was the highest final score received. Furthermore, final scores are underwhelming, and are typically in the 20 - 30 range, and final scores of 0.0 were fairly common. Getting final scores that were above 0.35 is fairly rare.
+
+However, some experimentation in quadrupling depth sizes with each encoder instead of doubling them resulted in more consistent and generally better results. In our case, utilizing a 5 layer network, with depth sizes of (16, 64, 256, 64, output depth) returned final scores that were consistently better than the previous results.  No final score returned was beneath the value of 0.20. Furthermore, scores above 0.40 were fairly common, and constituted about half of the results. And after 19 runs, the highest score of 0.4756 was obtained. The network architecture for these runs is what is the final form used in this project, and presented in this writeup.
+
+
+## Limitations and potential improvements
+Training and validation data used for all runs were the default ones provided in the project, with the single change of making flipped and mirrored copies of the images to effectively double the amount of training data, from around 4000 images, to more than 8000 training images. But despite this, further improvements to the final score could be achieved by obtaining more training data.
+
+Regarding the use of the same model and data to detect and follow other people or objects, this would not be possible for the current model since it has been trained for a particular image or likeness of a person. However, we could use the same network architecture to train and produce separate models for other objects we would want to be able to detect.  The primary requirement for us to achieve this would be to collect training data that is particular for the person/object of interest, and train a model using this data on the presented network architecture.  
+
+
+
+3. The student has a clear understanding and is able to identify the use of various techniques and concepts in network layers indicated by the write-up.
+
+The student is demonstrates a clear understanding of 1 by 1 convolutions and where/when/how it should be used.
+
+The student demonstrates a clear understanding of a fully connected layer and where/when/how it should be used.
+
+
+4. The student has a clear understanding of image manipulation in the context of the project indicated by the write-up.
+
+The student is able to identify the use of various reasons for encoding / decoding images, when it should be used, why it is useful, and any problems that may arise.
+
+5. The student displays a solid understanding of the limitations to the neural network with the given data chosen for various follow-me scenarios which are conveyed in the write-up. 
+
+The student is able to clearly articulate whether this model and data would work well for following another object (dog, cat, car, etc.) instead of a human and if not, what changes would be required.
+
+
+[1]: https://medium.com/towards-data-science/types-of-convolutions-in-deep-learning-717013397f4d "An Introduction to different Types of Convolutions in Deep Learning"
