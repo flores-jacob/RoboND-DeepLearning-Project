@@ -15,7 +15,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="deoder_arch.svg"
+   sodipodi:docname="decoder_arch.svg"
    inkscape:export-filename="/home/work/Desktop/MOOC/Udacity Robotics/Week 8 - Deep Neural Networks/RoboND-DeepLearning-Project/docs/decoder_arch.svg.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
@@ -90,9 +90,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.49497475"
-     inkscape:cx="712.57252"
-     inkscape:cy="250.48372"
+     inkscape:zoom="0.7"
+     inkscape:cx="574.69374"
+     inkscape:cy="303.69027"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -360,14 +360,14 @@
        id="g4304-6">
       <rect
          y="1659.6598"
-         x="620.15479"
+         x="556.5152"
          height="361.11896"
          width="52.547539"
          id="rect3791-6-4"
          style="fill:#000080;fill-opacity:1;stroke:#000000;stroke-width:1.06060374;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
       <rect
-         y="1658.9456"
-         x="745.86902"
+         y="1662.9862"
+         x="774.15332"
          height="361.11896"
          width="52.547539"
          id="rect3791-6-7-9"
@@ -376,11 +376,11 @@
          sodipodi:linespacing="125%"
          id="text3833-5"
          y="1846.6479"
-         x="686.42859"
+         x="671.27625"
          style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          xml:space="preserve"><tspan
            y="1846.6479"
-           x="686.42859"
+           x="671.27625"
            id="tspan3835-0"
            sodipodi:role="line">+</tspan></text>
       <text
@@ -396,7 +396,7 @@
            sodipodi:role="line">combine upsampled input with a same sized encoder output</tspan></text>
       <rect
          y="1661.8027"
-         x="897.29767"
+         x="973.05914"
          height="361.11896"
          width="52.547539"
          id="rect3791-6-7-3-7"
@@ -405,11 +405,11 @@
          sodipodi:linespacing="125%"
          id="text3833-6-1"
          y="1850.6156"
-         x="833.95648"
+         x="881.43365"
          style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          xml:space="preserve"><tspan
            y="1850.6156"
-           x="833.95648"
+           x="881.43365"
            id="tspan3835-7-7"
            sodipodi:role="line">=</tspan></text>
       <rect
@@ -506,5 +506,46 @@
          id="tspan5111"
          x="684.88342"
          y="345.25537" /></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.75px;line-height:125%;font-family:'Abyssinica SIL';-inkscape-font-specification:'Abyssinica SIL, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="344.70734"
+       y="991.56836"
+       id="text3814-3"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3816-67"
+         x="344.70734"
+         y="991.56836">upsampled input</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.75000191px;line-height:125%;font-family:'Abyssinica SIL';-inkscape-font-specification:'Abyssinica SIL, Normal';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="623.77069"
+       y="983.48706"
+       id="text3814-3-5"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3816-67-3"
+         x="623.77069"
+         y="983.48706">same sized</tspan><tspan
+         sodipodi:role="line"
+         x="623.77069"
+         y="1006.9246"
+         id="tspan4285">encoder output</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.75000191px;line-height:125%;font-family:'Abyssinica SIL';-inkscape-font-specification:'Abyssinica SIL, Normal';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="822.77081"
+       y="985.50745"
+       id="text3814-3-56"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3816-67-2"
+         x="822.77081"
+         y="985.50745">concatenated</tspan><tspan
+         sodipodi:role="line"
+         x="822.77081"
+         y="1008.9449"
+         id="tspan4287">result</tspan></text>
   </g>
 </svg>
