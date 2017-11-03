@@ -104,6 +104,7 @@ def fcn_model_5layer(inputs, num_classes, filter_set):
     enc2_filter_num = filter_set[1]
     one_by_one_filter_num = filter_set[2]
     dec1_filter_num = filter_set[1]
+    dec2_filter_num = filter_set[0]
 
     encoder_block1 = encoder_block(inputs, enc1_filter_num, strides=2)
     encoder_block2 = encoder_block(encoder_block1, enc2_filter_num, strides=2)
@@ -111,7 +112,7 @@ def fcn_model_5layer(inputs, num_classes, filter_set):
     one_by_one_conv = conv2d_batchnorm(encoder_block2, one_by_one_filter_num, kernel_size=1, strides=1)
 
     decoder_block1 = decoder_block(one_by_one_conv, encoder_block1, dec1_filter_num)
-    x = decoder_block(decoder_block1, inputs, num_classes)
+    x = decoder_block(decoder_block1, inputs, dec2_filter_num)
 
     # The function returns the output layer of your model. "x" is the final layer obtained from the last decoder_block()
     return layers.Conv2D(num_classes, 1, activation='softmax', padding='same')(x)
@@ -286,7 +287,7 @@ filter_sets = OrderedDict([
 ])
 
 # How many times we run for each setting
-number_of_runs = 15
+number_of_runs = 20
 
 # Call fcn_model()
 # output_layer = fcn_model(inputs, num_classes)
