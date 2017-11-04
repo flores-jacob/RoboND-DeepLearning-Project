@@ -297,7 +297,7 @@ for fcn_func in func_list:
             learning_params = {
                 "learning_rate": 0.01,
                 "batch_size": 40,
-                "num_epochs": 20,
+                "num_epochs": 25,
                 "steps_per_epoch": 200,
                 "validation_steps": 50,
                 "workers": 4
