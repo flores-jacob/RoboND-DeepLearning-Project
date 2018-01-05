@@ -307,7 +307,7 @@ for fcn_func in func_list:
             model = train_model(fcn_func, filter_set, learning_params=learning_params)
 
             # Save your trained model weights
-            # weight_file_name = 'model_weights'
+            # weight_file_name = 'model_weights.h5'
             weight_file_name = fcn_func.__name__ + "__" + filter_set_name + "__run" + str(run_number) + "__model_weights"
             model_tools.save_network(model, weight_file_name)
 
@@ -315,7 +315,7 @@ for fcn_func in func_list:
 
             # If you need to load a model which you previously trained you can uncomment the codeline that calls the function below.
 
-            # weight_file_name = 'model_weights'
+            # weight_file_name = 'model_weights.h5'
             # restored_model = model_tools.load_network(weight_file_name)
 
             run_num = 'run_1'
