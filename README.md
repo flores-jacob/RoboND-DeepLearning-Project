@@ -15,6 +15,10 @@ A quadrotor drone is flying in a simulated environment. What needs to be done is
 - The trained model files are linked below.  The final trained score of  0.4796 was able to exceed the required final score of 0.40 by a fair amount.
     - [model_weights.h5](./submission_requirements/model_files/model_weights.h5)
     - [config_model_weights.h5](./submission_requirements/model_files/config_model_weights.h5)
+    - NOTE: How to use these files
+        - Follow the instructions from the project's official github:
+        - [original project github](https://github.com/udacity/RoboND-DeepLearning-Project)
+        
 - Exported html version of the jupyter notebook that was used as our "workbook" as well as the notebook itself
     - [model_training.html](./submission_requirements/model_training.html)
     - [model_training.ipynb](./submission_requirements/model_training.ipynb)
